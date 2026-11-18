@@ -4,6 +4,7 @@ import { ParallaxBackground } from "./components/ParallaxBackground";
 import { FlashTransition } from "./components/FlashTransition";
 import { HookHeadline } from "./components/HookHeadline";
 import { Subtitles } from "./components/Subtitles";
+import { VisualCallout } from "./components/VisualCallout";
 import { CallToAction } from "./components/CallToAction";
 import { ProgressBar } from "./components/ProgressBar";
 import { Particles } from "./components/Particles";
@@ -62,7 +63,10 @@ export const MainComposition: React.FC<MainProps> = ({
       {/* Layer 5: STIKER KARAOKE SUBTITLES (Segmen 1+) - Kata aktif dibungkus stiker kuning dengan teks hitam */}
       {!isCtaActive && <Subtitles segments={segments} seed={seed} />}
 
-      {/* Layer 6: Call To Action button (Hanya jika showCta diaktifkan di akhir video) */}
+      {/* Layer 6: OBJEK VISUAL OTOMATIS (Animasi Air 💧, Panah Neon ⤵️, Peringatan ⚠️, Centang ✅) */}
+      <VisualCallout segments={segments} />
+
+      {/* Layer 7: Call To Action button (Hanya jika showCta diaktifkan di akhir video) */}
       {showCta && (
         <CallToAction
           text={ctaText}
@@ -71,10 +75,10 @@ export const MainComposition: React.FC<MainProps> = ({
         />
       )}
 
-      {/* Layer 7: Voiceover Audio */}
+      {/* Layer 8: Voiceover Audio */}
       {playMp3 && <Audio src={staticFile(audio)} volume={VIDEO.voVolume} />}
 
-      {/* Layer 8: Progress bar durasi */}
+      {/* Layer 9: Progress bar durasi */}
       <ProgressBar />
     </AbsoluteFill>
   );

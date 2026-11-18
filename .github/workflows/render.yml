@@ -1,0 +1,93 @@
+name: Render Video
+
+on:
+  workflow_dispatch:
+    inputs:
+      folder:
+        description: "Nama folder di public/ (contoh: video1)"
+        required: true
+        default: "video1"
+      audio_mode:
+        description: "Suara: auto (mp3 kalau ada, kalau tidak suara video), video, mp3, both, mute"
+        type: choice
+        default: "auto"
+        options:
+          - auto
+          - video
+          - mp3
+          - both
+          - mute
+      output_name:
+        description: "Nama file hasil (tanpa .mp4)"
+        required: true
+        default: "final"
+      seed:
+        description: "Seed variasi tampilan (kosongkan = otomatis dari nama folder)"
+        required: false
+        default: ""
+      show_cta:
+        description: "Tampilkan tombol CTA di akhir video (true / false)"
+        type: boolean
+        default: false
+      cta_text:
+        description: "Teks tombol CTA"
+        required: false
+        default: "🛒 CHECKOUT SEKARANG!"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: render-${{ github.event.inputs.folder }}
+  cancel-in-progress: true
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install ffmpeg
+        run: |
+          if ! command -v ffmpeg >/dev/null; then
+            for i in 1 2 3; do
+              sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg && break
+              echo "Percobaan $i gagal, coba lagi..."; sleep 5
+            done
+          fi
+          ffmpeg -version | head -1
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Cache browser Remotion
+        uses: actions/cache@v4
+        with:
+          path: node_modules/.remotion
+          key: remotion-browser-${{ runner.os }}-4.0.290
+
+      - name: Siapkan job (cari video, mp3, srt, hitung durasi)
+        run: node scripts/job.mjs "${{ inputs.folder }}" "${{ inputs.audio_mode }}" "${{ inputs.seed }}" "${{ inputs.show_cta }}" "${{ inputs.cta_text }}"
+
+      - name: Render video
+        run: |
+          mkdir -p out
+          npx remotion render src/index.ts Main out/${{ inputs.output_name }}.mp4 \
+            --props=job.json \
+            --gl=swiftshader \
+            --concurrency=2 \
+            --log=verbose
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.output_name }}
+          path: out/${{ inputs.output_name }}.mp4
+          retention-days: 7
+          if-no-files-found: error

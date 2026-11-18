@@ -1,5 +1,5 @@
-import { SubSegment } from "./types";
-import { KEYWORDS } from "./config";
+import type { SubSegment } from "../types";
+import { KEYWORDS } from "../config";
 
 // Kata-kata penghubung / pengisi (filler/stopwords) yang tidak perlu dijadikan stiker raksasa
 const FILLER_WORDS = new Set([
